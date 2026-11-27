@@ -1,0 +1,52 @@
+name: Özel gün story'si
+
+on:
+  schedule:
+    # Her gün 06:00 UTC = 09:00 Türkiye saati.
+    # GitHub zamanlanmış görevleri birkaç dakika geç başlatabilir.
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+    inputs:
+      date:
+        description: "Denenecek tarih (YYYY-AA-GG). Boş bırakılırsa bugün."
+        required: false
+        default: ""
+      dry_run:
+        description: "Deneme modu (paylaşım yapmaz)"
+        type: boolean
+        required: false
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  story:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Repo'yu al
+        uses: actions/checkout@v4
+
+      - name: Python kur
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Bugünün story'sini paylaş
+        env:
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+          POSTING_ENABLED: ${{ vars.POSTING_ENABLED }}
+          GRAPH_HOST: ${{ vars.GRAPH_HOST }}
+          GRAPH_API_VERSION: ${{ vars.GRAPH_API_VERSION }}
+          IMAGE_BASE_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.ref_name }}/Storyler
+          INPUT_DATE: ${{ inputs.date }}
+          INPUT_DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          # Boş bırakılan isteğe bağlı değişkenler bot içindeki varsayılanlara düşsün.
+          [ -z "$GRAPH_HOST" ] && unset GRAPH_HOST
+          [ -z "$GRAPH_API_VERSION" ] && unset GRAPH_API_VERSION
+          ARGS=()
+          if [ -n "$INPUT_DATE" ]; then ARGS+=(--date "$INPUT_DATE"); fi
+          if [ "$INPUT_DRY_RUN" = "true" ]; then ARGS+=(--dry-run); fi
+          python bot/post_story.py "${ARGS[@]}"

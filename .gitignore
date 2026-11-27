@@ -1,0 +1,19 @@
+# Gizli bilgiler asla repo'ya girmesin
+.env
+.env.*
+*.env
+secrets*
+*token*
+*.key
+*.pem
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# İşletim sistemi dosyaları
+.DS_Store
+Thumbs.db
+desktop.ini
